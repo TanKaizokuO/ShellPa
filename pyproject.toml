@@ -1,0 +1,41 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "shellpa"
+version = "0.1.0"
+requires-python = ">=3.10"
+dependencies = [
+    # CLI & TUI
+    "typer[all]>=0.12.3",
+    "rich>=13.7.1",
+
+    # AI
+    "anthropic>=0.28.0",
+
+    # GitHub Sync
+    "PyGithub>=2.3.0",
+    "requests>=2.32.3",
+    "keyring>=25.2.1",
+
+    # Utilities
+    "pyperclip>=1.9.0",
+    "python-crontab>=3.2.0",
+    "cryptography>=42.0.8",
+    "toml>=0.10.2",
+]
+
+[project.scripts]
+sp = "shellpa.main:app"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-rich>=0.1.1",
+]
+
+[tool.setuptools.package-dir]
+shellpa = "."
+
+
