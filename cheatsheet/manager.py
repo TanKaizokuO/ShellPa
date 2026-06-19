@@ -1,5 +1,6 @@
 import os
 import sys
+import uuid
 import shutil
 import shlex
 import sqlite3
@@ -26,11 +27,28 @@ def init_db(conn: sqlite3.Connection) -> None:
         source      TEXT NOT NULL DEFAULT 'manual',
         created_at  TEXT NOT NULL,
         last_used   TEXT,
-        use_count   INTEGER NOT NULL DEFAULT 0
+        use_count   INTEGER NOT NULL DEFAULT 0,
+        uuid        TEXT UNIQUE
     );
     """
     conn.execute(schema)
     conn.commit()
+
+    # Schema migration to add uuid column if not present
+    cursor = conn.execute("PRAGMA table_info(snippets)")
+    columns = [row[1] for row in cursor.fetchall()]
+    if "uuid" not in columns:
+        conn.execute("ALTER TABLE snippets ADD COLUMN uuid TEXT")
+        conn.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_snippets_uuid ON snippets(uuid)")
+        conn.commit()
+
+        # Backfill existing rows with UUIDs
+        cursor2 = conn.execute("SELECT id FROM snippets WHERE uuid IS NULL OR uuid = ''")
+        rows = cursor2.fetchall()
+        for r in rows:
+            sid = r[0]
+            conn.execute("UPDATE snippets SET uuid = ? WHERE id = ?", (str(uuid.uuid4()), sid))
+        conn.commit()
 
 def get_connection() -> sqlite3.Connection:
     """Connects to the snippets database and ensures tables are initialized."""
@@ -76,15 +94,23 @@ def normalize_tags(tags_str: str) -> str:
             unique_parts.append(p)
     return ",".join(unique_parts)
 
-def add_snippet(command: str, description: str, tags: str = "", source: str = "manual") -> int:
+def add_snippet(
+    command: str,
+    description: str,
+    tags: str = "",
+    source: str = "manual",
+    snippet_uuid: Optional[str] = None,
+) -> int:
     """Inserts a snippet and returns its database ID."""
     normalized_tags = normalize_tags(tags)
     created_at = datetime.now().isoformat()
+    if not snippet_uuid:
+        snippet_uuid = str(uuid.uuid4())
     try:
         with get_connection() as conn:
             cursor = conn.execute(
-                "INSERT INTO snippets (command, description, tags, source, created_at) VALUES (?, ?, ?, ?, ?)",
-                (command, description, normalized_tags, source, created_at)
+                "INSERT INTO snippets (command, description, tags, source, created_at, uuid) VALUES (?, ?, ?, ?, ?, ?)",
+                (command, description, normalized_tags, source, created_at, snippet_uuid)
             )
             conn.commit()
             return cursor.lastrowid

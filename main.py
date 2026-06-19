@@ -2,6 +2,7 @@ import typer
 from shellpa.dotfiles import dotfiles_app
 from shellpa.cheatsheet.cli import cheatsheet_app
 from shellpa.ai.cli import register_ai_commands
+from shellpa.sync import sync_app
 
 app = typer.Typer(
     name="sp",
@@ -10,6 +11,7 @@ app = typer.Typer(
 
 app.add_typer(dotfiles_app, name="dotfiles", help="Manage and sync dotfiles")
 app.add_typer(cheatsheet_app, name="cheatsheet", help="Manage shell snippets")
+app.add_typer(sync_app, name="sync", help="Sync dotfiles and cheatsheets to GitHub")
 
 @app.command()
 def search():
