@@ -12,7 +12,7 @@ dependencies = [
     "rich>=13.7.1",
 
     # AI
-    "anthropic>=0.28.0",
+    "openai>=1.0.0",
 
     # GitHub Sync
     "PyGithub>=2.3.0",

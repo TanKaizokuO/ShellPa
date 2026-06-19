@@ -1,6 +1,7 @@
 import typer
 from shellpa.dotfiles import dotfiles_app
 from shellpa.cheatsheet.cli import cheatsheet_app
+from shellpa.ai.cli import register_ai_commands
 
 app = typer.Typer(
     name="sp",
@@ -15,6 +16,9 @@ def search():
     """Fuzzy search and run saved shell snippets."""
     from shellpa.cheatsheet.manager import open_fzf_session
     open_fzf_session()
+
+# Register ask, explain, fix as flat top-level commands
+register_ai_commands(app)
 
 @app.callback()
 def main():
