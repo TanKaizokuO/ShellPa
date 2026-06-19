@@ -1,6 +1,7 @@
 # Shellpa (sp)
 
 ![Python Version](https://img.shields.io/badge/python-3.10%2B-blue)
+![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)
 
 A single CLI that manages your dotfiles, remembers your shell commands, and asks an LLM when you forget the syntax.
 
@@ -320,5 +321,4 @@ To prevent test runs from modifying your actual `~/.shellpa` configurations or d
 
 ## License
 
-Check the `LICENSE` file in the root of the repository for license details.
-*(Placeholder: If no LICENSE file is present, default constraints apply).*
+Licensed under the Apache License, Version 2.0. See the [LICENSE](LICENSE) file for the full license text.
