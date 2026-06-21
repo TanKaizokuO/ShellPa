@@ -321,4 +321,4 @@ To prevent test runs from modifying your actual `~/.shellpa` configurations or d
 
 ## License
 
-Licensed under the Apache License, Version 2.0. See the [LICENSE](LICENSE) file for the full license text.
+Licensed under the Apache License, Version 2.0. See the [LICENSE](LICENSE) file for full license text.
