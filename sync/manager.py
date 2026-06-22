@@ -323,6 +323,15 @@ def push(
         except Exception as e:
             raise SyncError(f"Failed to push commit: {e}")
 
+    try:
+        config = load_config()
+        if "sync" not in config:
+            config["sync"] = {}
+        config["sync"]["last_sync"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        save_config(config)
+    except Exception:
+        pass
+
 
 # ─── Status dry run / Diff calculation ─────────────────────────────────────────
 def diff_status(
@@ -551,6 +560,15 @@ def apply_pull(
             }
 
     save_metadata(meta)
+
+    try:
+        config = load_config()
+        if "sync" not in config:
+            config["sync"] = {}
+        config["sync"]["last_sync"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        save_config(config)
+    except Exception:
+        pass
 
 
 # ─── Cron / macOS Daemon ───────────────────────────────────────────────────────

@@ -151,3 +151,28 @@ def test_get_last_history_command_missing_file_returns_none(mock_shellpa_home, t
 
     result = ai_manager.get_last_history_command()
     assert result is None
+
+
+def test_handle_ask_result_menu_dispatch(mock_shellpa_home):
+    # Test that choices inside handle_ask_result work
+    # We will test Run ('r'), Save ('s'), and Cancel ('c')
+    
+    # Choice 'r': mock input to return 'r', mock subprocess.run
+    with patch("builtins.input", return_value="r"), \
+         patch("subprocess.run") as mock_run:
+        mock_result = MagicMock()
+        mock_result.returncode = 0
+        mock_run.return_value = mock_result
+        
+        ai_manager.handle_ask_result("echo test", "test query")
+        mock_run.assert_called_once_with("echo test", shell=True)
+
+    # Choice 's': mock input to return 's', mock add_snippet
+    with patch("builtins.input", return_value="s"), \
+         patch("shellpa.cheatsheet.manager.add_snippet", return_value=42) as mock_add:
+        ai_manager.handle_ask_result("echo test", "test query")
+        mock_add.assert_called_once_with("echo test", "test query", tags="ai", source="ai")
+
+    # Choice 'c': mock input to return 'c'
+    with patch("builtins.input", return_value="c"):
+        ai_manager.handle_ask_result("echo test", "test query")

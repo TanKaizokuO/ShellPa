@@ -310,22 +310,13 @@ def restore_files(target_path_str: Optional[str] = None) -> None:
             except Exception as e:
                 console.print(f"[red]Error: Failed to restore {file_path_str}: {e}[/red]")
 
-def show_status() -> None:
-    """Displays a status table of all tracked files."""
+def get_status_data() -> List[Dict]:
+    """Retrieves status data for all tracked files."""
     config = load_config()
     meta = load_metadata()
     files = config.get("dotfiles", {}).get("files", [])
 
-    if not files:
-        console.print("[yellow]No tracked files found in configuration.[/yellow]")
-        return
-
-    table = Table(title="Dotfiles Tracking Status")
-    table.add_column("Configured Path", style="cyan")
-    table.add_column("Disk Status", style="magenta")
-    table.add_column("Sync Status", style="green")
-    table.add_column("Last Backup", style="yellow")
-
+    status_list = []
     for file_path_str in files:
         expanded_path = os.path.expanduser(file_path_str)
         abs_path = os.path.abspath(expanded_path)
@@ -335,10 +326,10 @@ def show_status() -> None:
         bck_exists = os.path.exists(backup_path)
         
         # Determine Disk Status
-        disk_status = "[green]exists[/green]" if src_exists else "[red]missing[/red]"
+        disk_status = "exists" if src_exists else "missing"
         
         # Determine Sync Status & Last Backup
-        sync_status = "[red]no backup[/red]"
+        sync_status = "no backup"
         last_backup_str = "Never"
         
         file_meta = meta.get(abs_path)
@@ -356,18 +347,51 @@ def show_status() -> None:
                 src_hash = calculate_hash(abs_path)
                 bck_hash = calculate_hash(backup_path)
                 if src_hash == bck_hash:
-                    sync_status = "[green]in-sync[/green]"
+                    sync_status = "in-sync"
                 else:
-                    sync_status = "[yellow]out-of-sync[/yellow]"
+                    sync_status = "out-of-sync"
             else:
-                sync_status = "[yellow]backup-only[/yellow]"
+                sync_status = "backup-only"
         else:
             if src_exists:
-                sync_status = "[red]no backup[/red]"
+                sync_status = "no backup"
             else:
-                sync_status = "[red]missing[/red]"
+                sync_status = "missing"
 
-        table.add_row(file_path_str, disk_status, sync_status, last_backup_str)
+        status_list.append({
+            "configured_path": file_path_str,
+            "disk_status": disk_status,
+            "sync_status": sync_status,
+            "last_backup": last_backup_str,
+        })
+
+    return status_list
+
+def show_status() -> None:
+    """Displays a status table of all tracked files."""
+    data = get_status_data()
+    if not data:
+        console.print("[yellow]No tracked files found in configuration.[/yellow]")
+        return
+
+    table = Table(title="Dotfiles Tracking Status")
+    table.add_column("Configured Path", style="cyan")
+    table.add_column("Disk Status", style="magenta")
+    table.add_column("Sync Status", style="green")
+    table.add_column("Last Backup", style="yellow")
+
+    for item in data:
+        path = item["configured_path"]
+        disk_status = "[green]exists[/green]" if item["disk_status"] == "exists" else "[red]missing[/red]"
+        
+        if item["sync_status"] == "in-sync":
+            sync_status = "[green]in-sync[/green]"
+        elif item["sync_status"] in ("out-of-sync", "backup-only"):
+            sync_status = f"[yellow]{item['sync_status']}[/yellow]"
+        else:
+            sync_status = f"[red]{item['sync_status']}[/red]"
+
+        table.add_row(path, disk_status, sync_status, item["last_backup"])
 
     console.print(table)
 

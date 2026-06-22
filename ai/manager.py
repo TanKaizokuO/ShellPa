@@ -10,6 +10,9 @@ from typing import Optional, List, Dict
 
 from openai import OpenAI, AuthenticationError, APIConnectionError, APIError
 from rich.console import Console
+from rich.syntax import Syntax
+from rich.markdown import Markdown
+from rich.panel import Panel
 from shellpa.dotfiles.manager import DynamicPath
 
 console = Console()
@@ -281,3 +284,74 @@ def get_last_history_command() -> Optional[str]:
         return line
 
     return None
+
+
+def handle_ask_result(raw_result: str, query: str = "AI suggested command") -> None:
+    """Handles parsing warnings, rendering, and the interactive ask menu (Run, Save, Explain, Edit, Cancel)."""
+    warning_text: Optional[str] = None
+    command = raw_result
+
+    lines = raw_result.splitlines()
+    if lines and lines[0].strip().upper().startswith("WARNING:"):
+        warning_text = lines[0].strip()[len("WARNING:"):].strip()
+        command = "\n".join(lines[1:]).strip()
+
+    if is_dangerous(command) and not warning_text:
+        warning_text = DANGEROUS_FALLBACK_MSG
+
+    if warning_text:
+        console.print(Panel(f"[bold red]⚠ WARNING[/bold red]\n{warning_text}", border_style="red"))
+
+    console.print(Syntax(command, "bash", theme="monokai", line_numbers=False))
+
+    while True:
+        console.print(
+            "\n[bold][[R]un  [S]ave  [E]xplain  [Ed]it  [C]ancel][/bold] ",
+            end="",
+        )
+        choice = input().strip().lower()
+
+        if choice == "r":
+            console.print(f"[dim]Running:[/dim] {command}")
+            result = subprocess.run(command, shell=True)
+            console.print(f"[dim]Exit code: {result.returncode}[/dim]")
+            break
+
+        elif choice == "s":
+            from shellpa.cheatsheet.manager import add_snippet
+            sid = add_snippet(command, query, tags="ai", source="ai")
+            console.print(f"[green]Snippet #{sid} saved.[/green]")
+            break
+
+        elif choice == "e":
+            try:
+                explanation = explain(command)
+                console.print(Markdown(explanation))
+            except AIError as e:
+                console.print(f"[red]Error: {e}[/red]")
+            # Re-show command and loop again
+            console.print(Syntax(command, "bash", theme="monokai", line_numbers=False))
+
+        elif choice == "ed":
+            editor = os.environ.get("EDITOR", "nano")
+            with tempfile.NamedTemporaryFile(suffix=".sh", delete=False, mode="w") as tf:
+                tf.write(command)
+                temp_path = tf.name
+            try:
+                subprocess.run([editor, temp_path], check=True)
+                with open(temp_path, "r") as f:
+                    command = f.read().strip()
+            except Exception as exc:
+                console.print(f"[red]Error opening editor: {exc}[/red]")
+            finally:
+                if os.path.exists(temp_path):
+                    os.remove(temp_path)
+            if command:
+                console.print(Syntax(command, "bash", theme="monokai", line_numbers=False))
+
+        elif choice == "c":
+            console.print("[dim]Cancelled.[/dim]")
+            break
+
+        else:
+            console.print("[yellow]Unknown option. Type R, S, E, Ed, or C.[/yellow]")

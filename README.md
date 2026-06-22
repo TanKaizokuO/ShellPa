@@ -82,6 +82,9 @@ model = "meta/llama-3.1-70b-instruct"
 repo = "shellpa-backup"
 username = "github-username"
 encryption = false # Set to true if encryption-at-rest is enabled
+
+[dashboard]
+enabled = true # If false, sp dashboard immediately exits into your real shell
 ```
 *Note: The `[ai]` section should never contain API keys. Always supply secret credentials through environment variables.*
 
@@ -216,6 +219,14 @@ After generating a command or a fix, you will be prompted with:
   ```
   *(Disable with: `uv run sp sync auto --disable`)*
 
+### Dashboard
+
+- **Launch the interactive full-screen dashboard**:
+  ```bash
+  uv run sp dashboard
+  ```
+  *(Launches a centered stats and shortcuts panel. Pressing `s` or `q` exits into your actual login shell. Pressing `1`–`4` launches cheatsheet, AI, dotfiles, or sync commands seamlessly.)*
+
 ---
 
 ## How the Modules Connect
@@ -240,14 +251,35 @@ All modules are designed to integrate seamlessly. AI recommendations can be dire
 │ (dotfiles/)  │  │    (snippets.json)    │
 └──────┬───────┘  └───────────┬───────────┘
        │                      │
-       └──────────┬───────────┘
-                  │ (sp sync push)
-                  ▼
-         ┌──────────────────┐
-         │ Private GitHub   │
-         │ Backup Repository│
-         └──────────────────┘
+        └──────────┬───────────┘
+                   │ (sp sync push)
+                   ▼
+          ┌──────────────────┐
+          │ Private GitHub   │
+          │ Backup Repository│
+          └──────────────────┘
 ```
+
+---
+
+## Kitty Terminal Integration
+
+You can configure the Kitty terminal to launch `sp dashboard` automatically as your login shell.
+
+1. Find the absolute path to your `sp` binary (after installing via `uv tool install` or `pip`):
+   ```bash
+   which sp
+   ```
+2. Open your Kitty configuration file (`~/.config/kitty/kitty.conf`) and set the `shell` option to point directly to `sp dashboard` using the absolute path:
+   ```conf
+   shell /home/your-user/.local/bin/sp dashboard
+   ```
+3. Reload your Kitty configuration (`ctrl+shift+f5` by default) or restart Kitty. Opening any new window will now launch the Shellpa dashboard automatically.
+4. To temporarily disable this behavior without editing your Kitty configuration, set `enabled = false` in `~/.shellpa/config.toml`:
+   ```toml
+   [dashboard]
+   enabled = false
+   ```
 
 ---
 
@@ -262,6 +294,10 @@ shellpa/
 │   ├── cli.py
 │   └── manager.py
 ├── cheatsheet/      # Snippet CRUD operations and fzf shell integration.
+│   ├── __init__.py
+│   ├── cli.py
+│   └── manager.py
+├── dashboard/       # Interactive terminal dashboard and shell handoff.
 │   ├── __init__.py
 │   ├── cli.py
 │   └── manager.py
@@ -316,6 +352,7 @@ To prevent test runs from modifying your actual `~/.shellpa` configurations or d
 - **macOS Launchd Support**: Auto-sync recurring scheduling via `launchd` is currently stubbed and not implemented. Running `sp sync auto` on a non-Linux system will raise a platform error.
 - **Git Data API Constraints**: Because all operations run directly against the GitHub Git Data API without local Git command dependencies, sync speed is determined by HTTP payload round-trips. Syncing huge trees or large numbers of files may hit GitHub API rate limits.
 - **Subprocess Shell History**: Reading failed commands for `sp fix` relies on parsing local shell history files (such as `~/.bash_history` or `~/.zsh_history`). Commands that are run inside subshells or that are not immediately written to the filesystem by the host shell may not be captured.
+- **tmux/multiplexer interaction**: If you configure Kitty to launch `sp dashboard` as its login shell, it will appear once when the outer Kitty window opens. However, new tmux panes/windows created inside tmux are managed by tmux itself and will drop directly into your real shell rather than triggering the dashboard again.
 
 ---
 

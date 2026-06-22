@@ -3,6 +3,7 @@ from shellpa.dotfiles import dotfiles_app
 from shellpa.cheatsheet.cli import cheatsheet_app
 from shellpa.ai.cli import register_ai_commands
 from shellpa.sync import sync_app
+from shellpa.dashboard.cli import register_dashboard_commands
 
 app = typer.Typer(
     name="sp",
@@ -21,6 +22,7 @@ def search():
 
 # Register ask, explain, fix as flat top-level commands
 register_ai_commands(app)
+register_dashboard_commands(app)
 
 @app.callback()
 def main():
