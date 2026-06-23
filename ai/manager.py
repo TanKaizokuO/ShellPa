@@ -112,6 +112,8 @@ def call_nim(
             max_tokens=max_tokens,
         )
         text = response.choices[0].message.content
+        if text:
+            text = text.replace('\u200b', '').replace('\u200c', '').replace('\u200d', '').replace('\ufeff', '')
         if not text or not text.strip():
             raise AIError("Empty response from model.")
         return text.strip()
@@ -135,9 +137,9 @@ def _get_model() -> str:
     try:
         from shellpa.dotfiles.manager import load_config
         config = load_config()
-        return config.get("ai", {}).get("model", "moonshotai/kimi-k2.6")
+        return config.get("ai", {}).get("model", "meta/llama-3.1-70b-instruct")
     except Exception:
-        return "moonshotai/kimi-k2.6"
+        return "meta/llama-3.1-70b-instruct"
 
 # ─── Cache ────────────────────────────────────────────────────────────────────
 MAX_CACHE_SIZE = 10
@@ -184,7 +186,11 @@ def find_cached(query: str, context_hash: str) -> Optional[str]:
     entries = load_cache()
     for entry in entries:
         if entry.get("query") == query and entry.get("context_hash") == context_hash:
-            return entry.get("command")
+            cmd = entry.get("command")
+            if cmd:
+                cleaned = cmd.replace('\u200b', '').replace('\u200c', '').replace('\u200d', '').replace('\ufeff', '').strip()
+                if cleaned:
+                    return cmd
     return None
 
 # ─── Core AI functions ─────────────────────────────────────────────────────────
