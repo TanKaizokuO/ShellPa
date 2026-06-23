@@ -1,33 +1,57 @@
-# Shellpa (sp) Project Description
+# Shellpa
 
-Shellpa is an advanced command-line interface (CLI) tool designed to streamline developer workflows by acting as a comprehensive dotfiles manager, a persistent snippet cheatsheet, and an AI-powered shell assistant. It integrates system administration tasks with natural language processing to enhance terminal productivity.
+## Overview
+* **Vision/Goal:** A unified CLI tool to manage dotfiles, search and execute saved shell snippets, and use an LLM to translate natural language to shell commands or debug terminal errors.
+* **Current Status:** MVP / Active Development (v0.1.0)
 
-## Core Capabilities
+## Tech Stack
+* **Language/Runtime:** Python 3.10+
+* **Frameworks/Libraries:** Typer (CLI routing), Rich (terminal formatting), fzf (fuzzy finding UI), SQLite (built-in, for snippets DB).
+* **Key Dependencies:** OpenAI SDK (for NVIDIA NIM API), PyGithub (for Git Data API sync), Keyring (secret management), Cryptography (encryption at rest), Python-crontab (background sync scheduling).
 
-1. **Dotfiles Management**
-   - Seamlessly back up and restore configuration files (e.g., `~/.bashrc`, `~/.zshrc`) to a centralized local directory (`~/.shellpa/dotfiles/`).
-   - Monitor the status of live dotfiles against backup copies using incremental SHA-256 hashing.
-   - Built-in safety mechanisms with confirmation prompts to prevent accidental overwrites.
+## Directory Structure
+```text
+shellpa/
+├── main.py          # Root Typer CLI application entry point
+├── ai/              # AI translator, debugger, and explainers (NVIDIA NIM)
+│   ├── cli.py
+│   └── manager.py
+├── cheatsheet/      # Snippet CRUD operations and fzf shell integration
+│   ├── cli.py
+│   └── manager.py
+├── dashboard/       # Interactive terminal dashboard and shell handoff
+│   ├── cli.py
+│   └── manager.py
+├── dotfiles/        # Incremental backup copy logic and paths helper
+│   ├── cli.py
+│   └── manager.py
+└── sync/            # Remote repository sync, conflict diffs, and cron
+    ├── cli.py
+    └── manager.py
+```
 
-2. **Snippet Cheatsheet**
-   - Save, tag, and manage frequently used shell commands in a local SQLite database (`snippets.db`).
-   - Highly interactive fuzzy search interface powered by `fzf` for instantly finding and executing saved commands.
-   - Keybindings for quick actions: run, copy to clipboard, edit in `$EDITOR` before execution, or delete snippets.
-   - Usage statistics tracking to automatically sort popular commands.
+## Core Logic & Data Flow
+* **AI-Assisted Cheatsheet Ingestion:** Users execute `sp ask` or `sp fix` which calls the NVIDIA NIM LLM. Suggested commands can be interactively executed or directly saved into the Cheatsheet SQLite database (`~/.shellpa/snippets.db`).
+* **Dotfiles Backup & Status Monitoring:** Tracked files defined in `~/.shellpa/config.toml` are hashed (SHA-256) and copied to `~/.shellpa/dotfiles/`. The system monitors `meta.json` to detect drift between the live system and backup copies.
+* **Agentless Remote Sync:** Both the local dotfiles backups and an exported JSON representation of the cheatsheet DB are synchronized to a private GitHub repository via `sp sync push`/`pull`. This uses the GitHub Git Data API to avoid requiring a local `git` installation, and supports opt-in passphrase encryption before upload.
 
-3. **AI Assistant (Powered by NVIDIA NIM)**
-   - **Translate**: Convert natural language task descriptions into fully qualified shell commands with safety backstops for destructive operations.
-   - **Explain**: Provide detailed, flag-by-flag breakdowns of complex shell commands in human-readable Markdown.
-   - **Debug/Fix**: Read local shell history, re-run failing commands, and propose corrections intelligently using the LLM.
+## Environment & Setup
+* **Prerequisites:** Python 3.10+, `fzf` (required for snippet search), `uv` (recommended for package management), and `libsecret`/Keyring daemon (optional).
+* **Environment Variables:** 
+  * `NVIDIA_API_KEY`: Required for all AI commands. Never stored in the config file.
+  * `EDITOR`: Used for interactive command editing.
+* **Essential Commands:**
+  * Install dependencies: `uv sync`
+  * Install in editable mode: `uv pip install -e .`
+  * Run test suite (fully sandboxed via fixtures): `uv run pytest -v`
 
-4. **Repository Syncing**
-   - Direct integration with GitHub's REST/Git Data API, eliminating the need for a local Git dependency.
-   - Synchronize configuration files and snippet databases directly to a private GitHub repository.
-   - Passphrase-based, opt-in encryption-at-rest to securely store sensitive snippets and backups.
-   - Interactive merging with visual diffs for resolving conflict mismatches between local and remote states.
+## Development Conventions
+* **CLI Architecture:** The CLI is built with `Typer`. Subsystems are cleanly separated into packages (`ai`, `cheatsheet`, `sync`, etc.), each containing a `cli.py` for command routing and a `manager.py` for the core business logic.
+* **State Management:** All local data is strictly confined to `~/.shellpa/`, including `config.toml`, `snippets.db`, and `ai_cache.json`.
+* **Testing Standards:** Tests must use the `mock_shellpa_home` fixture to redirect `HOME` to a temporary directory, ensuring developers' actual configurations and databases are never mutated during test runs.
 
-## Architecture Highlights
-- Built in **Python 3.10+**.
-- Modular architecture comprising `ai`, `cheatsheet`, `dotfiles`, and `sync` subsystems.
-- All local configurations and data are safely sandboxed in `~/.shellpa/`.
-- Secret sanitation to prevent accidental uploads of API keys (e.g., NVIDIA NIM, GitHub tokens) during remote synchronization.
+## Known Issues / Debt
+* **macOS Sync Limitations:** Auto-sync via `launchd` is currently stubbed and unimplemented; `sp sync auto` will raise a platform error on non-Linux systems.
+* **Sync API Rate Limits:** Because the sync engine uses the GitHub Git Data API (HTTP payload round-trips) instead of a local Git binary, syncing very large file trees may hit rate limits or perform slowly.
+* **Shell History Parsing:** The `sp fix` command parses local shell history files (e.g., `~/.bash_history`). It may miss commands executed inside subshells or commands that haven't yet been flushed to disk by the host shell.
+* **Terminal Multiplexer UX:** If configured as a Kitty login shell, new panes or windows created inside `tmux` will bypass the dashboard and drop straight into the host shell.
