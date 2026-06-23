@@ -23,7 +23,7 @@ sync_app = typer.Typer(
 @sync_app.command("setup")
 def setup():
     """Interactive wizard to configure GitHub repository sync and optional encryption."""
-    console.print(Panel("[bold blue]Shellpa Sync Setup Wizard[/bold blue]", border_style="blue"))
+    console.print(Panel("[bold blue]ShellPa Sync Setup Wizard[/bold blue]", border_style="blue"))
 
     # 1. Prompt token
     token = typer.prompt("Enter your GitHub Personal Access Token (PAT)", hide_input=True)

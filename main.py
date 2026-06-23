@@ -11,7 +11,7 @@ from shellpa.dashboard.cli import register_dashboard_commands
 
 app = typer.Typer(
     name="sp",
-    help="Shellpa (sp) - An AI-powered shell assistant and dotfiles synchronizer.",
+    help="ShellPa (sp) - An AI-powered shell assistant and dotfiles synchronizer.",
 )
 
 app.add_typer(dotfiles_app, name="dotfiles", help="Manage and sync dotfiles")

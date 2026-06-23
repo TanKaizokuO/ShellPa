@@ -1,4 +1,4 @@
-# Shellpa (sp)
+# ShellPa (sp)
 
 ![Python Version](https://img.shields.io/badge/python-3.10%2B-blue)
 ![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)
@@ -41,8 +41,8 @@ A single CLI that manages your dotfiles, remembers your shell commands, and asks
 ### Steps
 1. Clone this repository:
    ```bash
-   git clone https://github.com/your-username/Shellpa.git
-   cd Shellpa
+   git clone https://github.com/your-username/ShellPa.git
+   cd ShellPa
    ```
 2. Create and synchronize a virtual environment using `uv`:
    ```bash
@@ -274,7 +274,7 @@ You can configure the Kitty terminal to launch `sp dashboard` automatically as y
    ```conf
    shell /home/your-user/.local/bin/sp dashboard
    ```
-3. Reload your Kitty configuration (`ctrl+shift+f5` by default) or restart Kitty. Opening any new window will now launch the Shellpa dashboard automatically.
+3. Reload your Kitty configuration (`ctrl+shift+f5` by default) or restart Kitty. Opening any new window will now launch the ShellPa dashboard automatically.
 4. To temporarily disable this behavior without editing your Kitty configuration, set `enabled = false` in `~/.shellpa/config.toml`:
    ```toml
    [dashboard]

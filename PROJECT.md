@@ -1,4 +1,4 @@
-# Shellpa
+# ShellPa
 
 ## Overview
 * **Vision/Goal:** A unified CLI tool to manage dotfiles, search and execute saved shell snippets, and use an LLM to translate natural language to shell commands or debug terminal errors.
