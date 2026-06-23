@@ -76,7 +76,7 @@ files = [
 
 [ai]
 # The model used for translation and explanation
-model = "meta/llama-3.1-70b-instruct"
+model = "moonshotai/kimi-k2.6"
 
 [sync]
 repo = "shellpa-backup"

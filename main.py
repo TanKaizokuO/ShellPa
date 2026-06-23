@@ -1,4 +1,8 @@
 import typer
+from dotenv import load_dotenv
+
+load_dotenv()
+
 from shellpa.dotfiles import dotfiles_app
 from shellpa.cheatsheet.cli import cheatsheet_app
 from shellpa.ai.cli import register_ai_commands

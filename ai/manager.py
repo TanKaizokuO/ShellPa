@@ -135,9 +135,9 @@ def _get_model() -> str:
     try:
         from shellpa.dotfiles.manager import load_config
         config = load_config()
-        return config.get("ai", {}).get("model", "meta/llama-3.1-70b-instruct")
+        return config.get("ai", {}).get("model", "moonshotai/kimi-k2.6")
     except Exception:
-        return "meta/llama-3.1-70b-instruct"
+        return "moonshotai/kimi-k2.6"
 
 # ─── Cache ────────────────────────────────────────────────────────────────────
 MAX_CACHE_SIZE = 10

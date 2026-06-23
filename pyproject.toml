@@ -10,20 +10,18 @@ dependencies = [
     # CLI & TUI
     "typer[all]>=0.12.3",
     "rich>=13.7.1",
-
     # AI
     "openai>=1.0.0",
-
     # GitHub Sync
     "PyGithub>=2.3.0",
     "requests>=2.32.3",
     "keyring>=25.2.1",
-
     # Utilities
     "pyperclip>=1.9.0",
     "python-crontab>=3.2.0",
     "cryptography>=42.0.8",
     "toml>=0.10.2",
+    "python-dotenv>=1.2.2",
 ]
 
 [project.scripts]
